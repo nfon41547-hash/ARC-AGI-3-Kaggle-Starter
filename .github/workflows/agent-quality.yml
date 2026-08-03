@@ -10,47 +10,21 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Configure Python
+        uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-          cache: pip
-      - name: Install deterministic runtime dependency
+      - name: Install NumPy
         run: python -m pip install --disable-pip-version-check 'numpy>=2.0,<3'
       - name: Compile competition and verification sources
-        run: >-
-          python -m py_compile
-          agent/my_agent.py
-          agent/sovereign_v43_types.py
-          agent/sovereign_v43_memory.py
-          agent/sovereign_v43_core.py
-          tests/v43_fixture.py
-          tests/v43_regression.py
-          tests/quality_gates.py
-          tests/performance_benchmark.py
-          scripts/build_notebook.py
-      - name: Run intelligence regression suite
+        run: python -m py_compile agent/my_agent.py agent/sovereign_v43_types.py agent/sovereign_v43_memory.py agent/sovereign_v43_core.py tests/v43_fixture.py tests/v43_regression.py tests/quality_gates.py tests/performance_benchmark.py tests/notebook_gate.py scripts/build_notebook.py
+      - name: Intelligence regression
         run: python tests/v43_regression.py
-      - name: Run static and determinism gates
+      - name: Static and determinism gates
         run: python tests/quality_gates.py
-      - name: Run bounded CPU latency gate
+      - name: CPU latency gate
         run: python tests/performance_benchmark.py
-      - name: Validate notebook build profile
-        run: |
-          python - <<'PY'
-          import importlib.util
-          from pathlib import Path
-          path = Path('scripts/build_notebook.py')
-          spec = importlib.util.spec_from_file_location('builder', path)
-          module = importlib.util.module_from_spec(spec)
-          assert spec and spec.loader
-          spec.loader.exec_module(module)
-          assert module.ACCELERATOR == 'cpu'
-          notebook = module.build()
-          assert notebook['metadata']['kaggle']['isGpuEnabled'] is False
-          assert notebook['metadata']['kaggle']['isInternetEnabled'] is False
-          source = '\n'.join(''.join(cell.get('source', '')) for cell in notebook['cells'])
-          assert 'sovereign_numpy_v43' in source
-          for name in ('sovereign_v43_types.py', 'sovereign_v43_memory.py', 'sovereign_v43_core.py'):
-              assert name in source
-          PY
+      - name: Notebook build gate
+        run: python tests/notebook_gate.py
