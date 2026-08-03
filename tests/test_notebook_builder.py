@@ -57,12 +57,12 @@ def test_notebook_json_roundtrip_and_single_output_contract() -> None:
     module = load_builder()
     notebook = module.build()
     encoded = json.dumps(notebook, sort_keys=True)
-    decoded = json.loads(encoded)
-    assert decoded == notebook
+    assert json.loads(encoded) == notebook
     code = "\n".join(str(cell.get("source", "")) for cell in notebook["cells"])
-    assert code.count("submission.parquet") >= 1
-    assert "to_parquet('/kaggle/working/submission.parquet'" not in code or True
+    assert code.count("to_parquet(") == 1
+    assert "'/kaggle/working/submission.parquet'" in code
     assert "%%writefile /tmp/my_agent.py" in code
+    assert "%%writefile /kaggle/working/" not in code
 
 
 def test_kernel_metadata_is_cpu_offline() -> None:
