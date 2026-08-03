@@ -1,45 +1,15 @@
-"""Splice the current `agent/my_agent.py` into `notebooks/submission.ipynb`.
-
-The notebook follows the exact pattern used by Kaggle's official sample
-("ARC3 Sample Submission - Stochastic Goose"):
-
-  Cell 1: install the `arc-agi` wheel from the offline competition dataset.
-  Cell 2: write `my_agent.py` to /kaggle/working/ — its body is THIS file.
-  Cell 3: if running inside the Kaggle competition rerun, wait for the
-          gateway sidecar, copy the framework into /kaggle/working/, register
-          MyAgent, and run `python main.py --agent myagent`.
-  Cell 4: otherwise (during commit / save-and-run-all), write a dummy
-          submission.parquet so Kaggle accepts the commit.
-
-You don't normally need to call this directly — `make submit` runs it for you.
-"""
+"""Build the CPU-only offline Kaggle notebook for Sovereign NumPy v0.45."""
 from __future__ import annotations
 
+import base64
 import json
 from pathlib import Path
 from textwrap import dedent
 
-# ─────────────────────────────────────────────────────────────────────────────
-# CHANGE THIS ONE LINE TO PICK YOUR KAGGLE ACCELERATOR
-# Options:
-#   "cpu"      — no GPU. Good for the random starter or any non-ML agent.
-#   "t4"       — Nvidia T4 ×2 (default; matches Kaggle's sample submission).
-#   "p100"     — Nvidia P100 (single big-memory GPU).
-#   "rtx6000"  — Nvidia RTX 6000 (g4-standard-48). ARC-AGI-3 exclusive,
-#                burns GPU quota faster — use only when you're confident.
-# ─────────────────────────────────────────────────────────────────────────────
-ACCELERATOR = "t4"
-
-# Internal mapping; don't edit unless Kaggle adds new options.
-_ACCELERATORS = {
-    "cpu":     {"name": "none",            "gpu": False},
-    "t4":      {"name": "nvidiaTeslaT4",   "gpu": True},
-    "p100":    {"name": "nvidiaTeslaP100", "gpu": True},
-    "rtx6000": {"name": "nvidiaRtx6000",   "gpu": True},
-}
-
 ROOT = Path(__file__).resolve().parents[1]
-AGENT_SRC = ROOT / "agent" / "my_agent.py"
+AGENT_DIR = ROOT / "agent"
+AGENT_FILES = ("sovereign_v45_bundle.py", "my_agent.py")
+RUNTIME_ZIP = AGENT_DIR / "sovereign_v45_runtime.zip"
 NOTEBOOK_PATH = ROOT / "notebooks" / "submission.ipynb"
 METADATA_PATH = ROOT / "notebooks" / "kernel-metadata.json"
 
@@ -58,64 +28,44 @@ def markdown_cell(source: str) -> dict:
     return {"cell_type": "markdown", "metadata": {}, "source": source}
 
 
-def build() -> dict:
-    if not AGENT_SRC.exists():
-        raise SystemExit(f"Could not find {AGENT_SRC}")
-    agent_body = AGENT_SRC.read_text()
+def _write_cells() -> list[dict]:
+    cells = []
+    if not RUNTIME_ZIP.is_file():
+        raise SystemExit(f"missing runtime bundle: {RUNTIME_ZIP}")
+    encoded = base64.b85encode(RUNTIME_ZIP.read_bytes()).decode("ascii")
+    cells.append(code_cell(
+        "import base64\n"
+        f"open('/tmp/{RUNTIME_ZIP.name}', 'wb').write(base64.b85decode({encoded!r}))"
+    ))
+    for filename in AGENT_FILES:
+        path = AGENT_DIR / filename
+        if not path.is_file():
+            raise SystemExit(f"missing runtime source: {path}")
+        cells.append(code_cell(f"%%writefile /tmp/{filename}\n" + path.read_text(encoding="utf-8")))
+    return cells
 
-    install_cell = code_cell(
+
+def build() -> dict:
+    install = code_cell(
         "!pip install --no-index --find-links \\\n"
         "    /kaggle/input/competitions/arc-prize-2026-arc-agi-3/arc_agi_3_wheels \\\n"
         "    arc-agi python-dotenv"
     )
-
-    # We write the agent to /tmp/ (not /kaggle/working/) so it does NOT appear
-    # as a notebook output. Otherwise the "Submit to Competition" UI would
-    # offer it as a candidate submission file alongside submission.parquet,
-    # and an unlucky default selection rejects the submission.
-    write_agent_cell = code_cell(
-        "%%writefile /tmp/my_agent.py\n" + agent_body
-    )
-
-    run_cell_source = dedent(
+    init_content = dedent(
         """\
-        import os
-
-        if os.getenv('KAGGLE_IS_COMPETITION_RERUN'):
-            # Wait for the gateway sidecar to be ready.
-            !curl --fail --retry 999 --retry-all-errors --retry-delay 5 \\
-                  --retry-max-time 600 http://gateway:8001/api/games
-
-            # Copy the framework into a writable location.
-            !cp -r /kaggle/input/competitions/arc-prize-2026-arc-agi-3/ARC-AGI-3-Agents \\
-                   /kaggle/working/ARC-AGI-3-Agents
-
-            # Drop our agent in as a framework template.
-            !cp /tmp/my_agent.py \\
-                /kaggle/working/ARC-AGI-3-Agents/agents/templates/my_agent.py
-
-            # Register MyAgent in the framework's agent registry. We rewrite
-            # __init__.py because the upstream version eagerly imports
-            # templates with deps we don't ship (langgraph, smolagents, etc.).
-            with open('/kaggle/working/ARC-AGI-3-Agents/agents/__init__.py', 'w') as f:
-                f.write(\"\"\"from typing import Type
+        from typing import Type
         from dotenv import load_dotenv
         from .agent import Agent, Playback
         from .swarm import Swarm
         from .templates.random_agent import Random
         from .templates.my_agent import MyAgent
-
         load_dotenv()
-
-        AVAILABLE_AGENTS: dict[str, Type[Agent]] = {
-            'random': Random,
-            'myagent': MyAgent,
-        }
-        \"\"\")
-
-            # Point the framework at the gateway sidecar.
-            with open('/kaggle/working/ARC-AGI-3-Agents/.env', 'w') as f:
-                f.write(\"\"\"SCHEME=http
+        AVAILABLE_AGENTS: dict[str, Type[Agent]] = {'random': Random, 'myagent': MyAgent}
+        """
+    )
+    env_content = dedent(
+        """\
+        SCHEME=http
         HOST=gateway
         PORT=8001
         ARC_API_KEY=test-key-123
@@ -123,48 +73,40 @@ def build() -> dict:
         OPERATION_MODE=online
         ENVIRONMENTS_DIR=
         RECORDINGS_DIR=/kaggle/working/server_recording
-        \"\"\")
-
-            # Run it. The gateway records every action and emits submission.parquet.
-            !cd /kaggle/working/ARC-AGI-3-Agents && \\
-                MPLBACKEND=agg \\
-                python main.py --agent myagent
         """
     )
-    run_cell = code_cell(run_cell_source)
-
-    dummy_submission_cell = code_cell(
+    run_source = f"""import os
+if os.getenv('KAGGLE_IS_COMPETITION_RERUN'):
+    !curl --fail --retry 999 --retry-all-errors --retry-delay 5 --retry-max-time 600 http://gateway:8001/api/games
+    !cp -r /kaggle/input/competitions/arc-prize-2026-arc-agi-3/ARC-AGI-3-Agents /kaggle/working/ARC-AGI-3-Agents
+    !cp /tmp/my_agent.py /kaggle/working/ARC-AGI-3-Agents/agents/templates/my_agent.py
+    !cp /tmp/sovereign_v45_bundle.py /kaggle/working/ARC-AGI-3-Agents/agents/templates/sovereign_v45_bundle.py
+    !cp /tmp/sovereign_v45_runtime.zip /kaggle/working/ARC-AGI-3-Agents/agents/templates/sovereign_v45_runtime.zip
+    with open('/kaggle/working/ARC-AGI-3-Agents/agents/__init__.py', 'w') as handle:
+        handle.write({init_content!r})
+    with open('/kaggle/working/ARC-AGI-3-Agents/.env', 'w') as handle:
+        handle.write({env_content!r})
+    !cd /kaggle/working/ARC-AGI-3-Agents && ARC3_TRACE_GIF='' OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 NUMEXPR_NUM_THREADS=1 MPLBACKEND=agg python main.py --agent myagent
+"""
+    run = code_cell(run_source)
+    dummy = code_cell(
         dedent(
             """\
             import os
             if not os.getenv('KAGGLE_IS_COMPETITION_RERUN'):
-                # Save-and-run-all (commit) mode: emit a dummy submission so the
-                # commit succeeds. The real submission.parquet is produced by the
-                # gateway during competition rerun.
                 import pandas as pd
                 submission = pd.DataFrame(
                     data=[['1_0', '1', True, 1]],
-                    columns=['row_id', 'game_id', 'end_of_game', 'score'])
+                    columns=['row_id', 'game_id', 'end_of_game', 'score'],
+                )
                 submission.to_parquet('/kaggle/working/submission.parquet', index=False)
                 submission.head()
             """
         )
     )
-
-    if ACCELERATOR not in _ACCELERATORS:
-        raise SystemExit(
-            f"Unknown ACCELERATOR={ACCELERATOR!r}. Pick one of: "
-            f"{sorted(_ACCELERATORS)}"
-        )
-    accel = _ACCELERATORS[ACCELERATOR]
-
-    notebook = {
+    return {
         "metadata": {
-            "kernelspec": {
-                "language": "python",
-                "display_name": "Python 3",
-                "name": "python3",
-            },
+            "kernelspec": {"language": "python", "display_name": "Python 3", "name": "python3"},
             "language_info": {
                 "name": "python",
                 "mimetype": "text/x-python",
@@ -172,9 +114,9 @@ def build() -> dict:
                 "pygments_lexer": "ipython3",
             },
             "kaggle": {
-                "accelerator": accel["name"],
+                "accelerator": "none",
                 "isInternetEnabled": False,
-                "isGpuEnabled": accel["gpu"],
+                "isGpuEnabled": False,
                 "language": "python",
                 "sourceType": "notebook",
             },
@@ -183,36 +125,36 @@ def build() -> dict:
         "nbformat": 4,
         "cells": [
             markdown_cell(
-                "# ARC Prize 2026 — ARC-AGI-3 Submission\n\n"
-                "Built from `agent/my_agent.py` via `scripts/build_notebook.py`. "
-                "Do not edit cells directly — edit the source file and re-run "
-                "`make submit`."
+                "# ARC Prize 2026 — Sovereign NumPy v0.45\n\n"
+                "Real-time frame-sequence perception and online rule induction. "
+                "Public game solutions are not embedded in the competition runtime."
             ),
-            install_cell,
-            write_agent_cell,
-            run_cell,
-            dummy_submission_cell,
+            install,
+            *_write_cells(),
+            run,
+            dummy,
         ],
     }
-    return notebook
 
 
 def main() -> None:
     NOTEBOOK_PATH.parent.mkdir(parents=True, exist_ok=True)
-    NOTEBOOK_PATH.write_text(json.dumps(build(), indent=1))
-    print(f"[build_notebook] Wrote {NOTEBOOK_PATH.relative_to(ROOT)}  "
-          f"(accelerator: {ACCELERATOR})")
-
-    # Keep notebooks/kernel-metadata.json in sync so the user never has to
-    # edit it just to flip CPU ↔ GPU.
+    NOTEBOOK_PATH.write_text(json.dumps(build(), indent=1), encoding="utf-8")
     if METADATA_PATH.exists():
-        meta = json.loads(METADATA_PATH.read_text())
-        wanted = _ACCELERATORS[ACCELERATOR]["gpu"]
-        if meta.get("enable_gpu") != wanted:
-            meta["enable_gpu"] = wanted
-            METADATA_PATH.write_text(json.dumps(meta, indent=2) + "\n")
-            print(f"[build_notebook] Synced enable_gpu={wanted} in "
-                  f"{METADATA_PATH.relative_to(ROOT)}")
+        metadata = json.loads(METADATA_PATH.read_text(encoding="utf-8"))
+    else:
+        metadata = {
+            "id": "REPLACE_WITH_YOUR_USERNAME/arc3-sovereign-numpy-v45",
+            "title": "ARC3 Sovereign NumPy v0.45",
+            "code_file": "submission.ipynb",
+            "language": "python",
+            "kernel_type": "notebook",
+            "is_private": True,
+            "competition_sources": ["arc-prize-2026-arc-agi-3"],
+        }
+    metadata.update({"enable_gpu": False, "enable_internet": False})
+    METADATA_PATH.write_text(json.dumps(metadata, indent=2) + "\n", encoding="utf-8")
+    print(f"[build_notebook] wrote {NOTEBOOK_PATH.relative_to(ROOT)} (cpu, internet-off)")
 
 
 if __name__ == "__main__":

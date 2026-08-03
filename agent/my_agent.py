@@ -1,87 +1,115 @@
-"""Your ARC-AGI-3 agent. This is the *only* file you should normally edit.
+"""ARC3 Sovereign NumPy v0.45 competition adapter.
 
-`scripts/build_notebook.py` splices the contents of this file into the
-Kaggle submission notebook, so your local dev loop and your Kaggle
-submission stay in lock-step:
-
-    [edit my_agent.py] → [make play-local] → [make submit]
-
-The default body below is a port of the Stochastic Goose / random_agent
-sample — a known-good baseline that produces a valid submission and
-proves your end-to-end pipeline works. Replace `choose_action` with your
-real strategy.
-
-Contract (enforced by the ARC-AGI-3-Agents framework):
-  - Subclass `agents.agent.Agent`.
-  - Class must be named `MyAgent` (the notebook's __init__.py registers it).
-  - Implement `is_done(frames, latest_frame) -> bool`.
-  - Implement `choose_action(frames, latest_frame) -> GameAction`.
+The hot path contains no public-game lookup, fixed color semantics, or fixed
+action mapping. Perception, object identity, action effects, goals, and rules are
+learned from the authoritative frame stream in real time.
 """
 from __future__ import annotations
 
-import random
-import time
+import os
 from typing import Any
 
 from arcengine import FrameData, GameAction, GameState
-
-# When run inside the ARC-AGI-3-Agents framework (locally or on Kaggle)
-# the `agents` package is on sys.path, so this import resolves.
 from agents.agent import Agent
+
+try:
+    from .sovereign_v45_bundle import ensure_runtime
+except ImportError:
+    from sovereign_v45_bundle import ensure_runtime
+
+ensure_runtime()
+
+try:
+    from .sovereign_v45_core import CognitiveCore
+    from .sovereign_v45_gif import RealtimeGifRecorder
+    from .sovereign_v45_perception import available_actions, is_complex_action, to_grid
+except ImportError:
+    from sovereign_v45_core import CognitiveCore
+    from sovereign_v45_gif import RealtimeGifRecorder
+    from sovereign_v45_perception import available_actions, is_complex_action, to_grid
 
 
 class MyAgent(Agent):
-    """Picks legal actions uniformly at random. Replace with your strategy."""
+    """Data-derived, deterministic, real-time competition agent."""
 
-    # Upper bound on actions per game; the framework also enforces global limits.
-    MAX_ACTIONS = 80
+    MAX_ACTIONS = int(os.environ.get("ARC3_MAX_ACTIONS", "400"))
+    MAX_RECOVERIES = int(os.environ.get("ARC3_MAX_RECOVERIES", "4"))
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
-        # Seed per game_id so replays from the same game are reproducible but
-        # different games explore independently.
-        seed = int(time.time() * 1_000_000) + hash(self.game_id) % 1_000_000
-        random.seed(seed)
+        memory_budget = int(os.environ.get("ARC3_MEMORY_BUDGET", str(1 << 17)))
+        self.core = CognitiveCore(memory_budget=memory_budget)
+        self.recoveries = 0
+        trace_path = os.environ.get("ARC3_TRACE_GIF", "").strip()
+        self.gif = RealtimeGifRecorder(trace_path) if trace_path else None
 
     @property
     def name(self) -> str:
-        return f"{super().name}.{self.MAX_ACTIONS}"
+        return f"{super().name}.sovereign_numpy_v45"
 
     def is_done(self, frames: list[FrameData], latest_frame: FrameData) -> bool:
-        # Stop once we win. Don't stop on GAME_OVER — we want to RESET and retry.
         return latest_frame.state is GameState.WIN
 
-    def choose_action(
-        self, frames: list[FrameData], latest_frame: FrameData
-    ) -> GameAction:
-        # First call or after a death → reset the level.
-        if latest_frame.state in (GameState.NOT_PLAYED, GameState.GAME_OVER):
+    def _fallback_actions(self) -> Any:
+        environment = getattr(self, "arc_env", None)
+        return getattr(environment, "action_space", None)
+
+    @staticmethod
+    def _materialize_action(action: Any, coordinate: tuple[int, int] | None, reason: str, confidence: float) -> GameAction:
+        if is_complex_action(action):
+            x, y = coordinate or (0, 0)
+            setter = getattr(action, "set_data", None)
+            if not callable(setter):
+                raise TypeError("complex action does not expose set_data")
+            setter({"x": int(x), "y": int(y)})
+        action.reasoning = {
+            "text": reason[:240],
+            "confidence": round(float(confidence), 6),
+            "source": "online_observation_only",
+        }
+        return action
+
+    def choose_action(self, frames: list[FrameData], latest_frame: FrameData) -> GameAction:
+        fallback = self._fallback_actions()
+
+        if latest_frame.state is GameState.NOT_PLAYED:
+            self.core.begin_level(retain_rules=True)
             return GameAction.RESET
 
-        # ── Per-game strategy fork ───────────────────────────────────────────
-        # By default every game uses the same uniformly-random strategy in the
-        # `else` branch below. This `if` shows ONE example of giving a single
-        # game its own heuristic: on LS20 we bias the random pick so ACTION4
-        # is twice as likely as any other action. Add more `elif` branches to
-        # specialize other games.
-        #
-        # `self.game_id` is set by the framework. It may be the short id
-        # ("ls20") or include a version suffix ("ls20-9607627b"), so we
-        # compare on the prefix to be safe.
-        candidate_actions = [a for a in GameAction if a is not GameAction.RESET]
-        if self.game_id.split("-")[0] == "ls20":
-            weights = [2 if a is GameAction.ACTION4 else 1 for a in candidate_actions]
-            action = random.choices(candidate_actions, weights=weights, k=1)[0]
-        else:
-            action = random.choice(candidate_actions)
-        # ────────────────────────────────────────────────────────────────────
+        actions = available_actions(latest_frame, fallback)
+        levels = int(getattr(latest_frame, "levels_completed", 0) or 0)
 
-        if action.is_complex():
-            # ACTION6 takes (x, y) coordinates on a 64×64 grid.
-            action.set_data(
-                {"x": random.randint(0, 63), "y": random.randint(0, 63)}
+        if latest_frame.state is GameState.GAME_OVER:
+            try:
+                scene = self.core.observe_sequence(latest_frame, actions, levels, terminal_loss=True)
+                if self.gif is not None:
+                    self.gif.append_scene(scene, self.core.diagnostics())
+            finally:
+                self.core.begin_level(retain_rules=True)
+            return GameAction.RESET
+
+        try:
+            scene = self.core.observe_sequence(latest_frame, actions, levels)
+            if self.gif is not None:
+                self.gif.append_scene(scene, self.core.diagnostics())
+            decision = self.core.decide(scene, actions, levels)
+            self.recoveries = 0
+            return self._materialize_action(
+                decision.action,
+                decision.coordinate,
+                decision.reason,
+                decision.confidence,
             )
-            action.reasoning = {"why": "random complex action"}
-        else:
-            action.reasoning = f"random simple action: {action.value}"
-        return action
+        except Exception as exc:
+            self.recoveries += 1
+            if self.recoveries > self.MAX_RECOVERIES:
+                raise RuntimeError("bounded ARC3 recovery budget exhausted") from exc
+            grid = to_grid(latest_frame)
+            scene = self.core.last_scene or self.core.perception.observe(grid)
+            decision = self.core.deterministic_recovery(scene, actions)
+            return self._materialize_action(
+                decision.action,
+                decision.coordinate,
+                f"{decision.reason}:{type(exc).__name__}",
+                decision.confidence,
+            )
