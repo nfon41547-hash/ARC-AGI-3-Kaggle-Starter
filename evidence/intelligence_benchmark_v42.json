@@ -1,0 +1,61 @@
+{
+  "conditions": [
+    {
+      "absolute_completion_gain": 0.98,
+      "adaptive": {
+        "completion_rate": 0.985,
+        "episodes": 200,
+        "illegal_actions": 0,
+        "mean_actions": 23.92,
+        "wins": 197
+      },
+      "condition": "navigation",
+      "random": {
+        "completion_rate": 0.005,
+        "episodes": 200,
+        "illegal_actions": 0,
+        "mean_actions": 79.92,
+        "wins": 1
+      }
+    },
+    {
+      "absolute_completion_gain": 0.925,
+      "adaptive": {
+        "completion_rate": 0.94,
+        "episodes": 200,
+        "illegal_actions": 0,
+        "mean_actions": 39.825,
+        "wins": 188
+      },
+      "condition": "hidden_remap",
+      "random": {
+        "completion_rate": 0.015,
+        "episodes": 200,
+        "illegal_actions": 0,
+        "mean_actions": 99.82,
+        "wins": 3
+      }
+    },
+    {
+      "absolute_completion_gain": 0.895,
+      "adaptive": {
+        "completion_rate": 1.0,
+        "episodes": 200,
+        "illegal_actions": 0,
+        "mean_actions": 1.0,
+        "wins": 200
+      },
+      "condition": "click",
+      "random": {
+        "completion_rate": 0.105,
+        "episodes": 200,
+        "illegal_actions": 0,
+        "mean_actions": 11.425,
+        "wins": 21
+      }
+    }
+  ],
+  "policy": "sovereign-numpy-v42",
+  "seed_range": [0, 199],
+  "scope": "deterministic synthetic/procedural evidence; not an official Kaggle score"
+}
