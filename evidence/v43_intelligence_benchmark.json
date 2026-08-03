@@ -1,0 +1,16 @@
+{
+  "click_v43": {"episodes": 100, "mean_clicks": 1.0, "solved": 100, "unique_clicks": 100},
+  "footprint_random": {"episodes": 120, "illegal": 0, "mean_steps": 97.75, "noops": 2092, "solved": 5},
+  "footprint_v43": {"episodes": 120, "illegal": 0, "mean_steps": 14.85, "noops": 0, "solved": 120},
+  "hidden_remap_random": {"episodes": 200, "illegal": 0, "mean_steps": 77.025, "noops": 3120, "solved": 23},
+  "hidden_remap_v43": {"episodes": 200, "illegal": 0, "mean_steps": 21.63, "noops": 278, "solved": 199},
+  "restricted_v43": {"episodes": 100, "illegal": 0, "solved": 100},
+  "retention_random": {"episodes": 120, "illegal": 0, "mean_steps": 59.94166666666667, "noops": 1548, "solved": 1},
+  "retention_v43": {"episodes": 120, "illegal": 0, "mean_steps": 12.9, "noops": 0, "solved": 120},
+  "role_inference_v43": {"episodes": 120, "illegal": 0, "mean_steps": 12.966666666666667, "noops": 26, "solved": 120},
+  "scope": "Controlled synthetic navigation/click tasks; not an official ARC-AGI-3 score.",
+  "stationary_random": {"episodes": 200, "illegal": 0, "mean_steps": 77.585, "noops": 3155, "solved": 21},
+  "stationary_v43": {"episodes": 200, "illegal": 0, "mean_steps": 15.675, "noops": 97, "solved": 200},
+  "visible_modes_random": {"episodes": 200, "illegal": 0, "mean_steps": 77.62, "noops": 3142, "solved": 18},
+  "visible_modes_v43": {"episodes": 200, "illegal": 0, "mean_steps": 20.16, "noops": 220, "solved": 200}
+}
