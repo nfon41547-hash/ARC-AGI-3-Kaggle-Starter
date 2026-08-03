@@ -1,0 +1,54 @@
+{
+  "schema": "arc3-training-data-lock-v41",
+  "sources": [
+    {
+      "bytes": 83870374,
+      "name": "base",
+      "path": "training/base/arc3_ultra_curriculum_v4_500k.h5",
+      "records": 500000,
+      "sampled_validation": "PASS",
+      "sha256": "6fb0e1de58517fd15fc7dd6f258faceff3f70a6d8a2c6c47d1b9c486412963f5"
+    },
+    {
+      "bytes": 4779645,
+      "name": "quality",
+      "path": "training/quality/arc3_sovereign_quality_overlay_v1_20k.h5",
+      "records": 20000,
+      "sampled_validation": "PASS",
+      "sha256": "7c23bf6b8b4d6194b6ca730af2a88ffe5403f7d43f6e5b978598bb336a4d1812"
+    },
+    {
+      "bytes": 11011964,
+      "name": "hard_mining",
+      "path": "training/hard_mining/arc3_hard_mined_overlay_v37_40k.h5",
+      "records": 40000,
+      "sampled_validation": "PASS",
+      "sha256": "4cd8163759929c92d9aa67d934541829dc2b79b0ec45c2d386ba3d69d3888410"
+    },
+    {
+      "bytes": 2978804,
+      "name": "frontier",
+      "path": "training/frontier/arc3_sovereign_frontier_overlay_v2_8k.h5",
+      "records": 8000,
+      "sampled_validation": "PASS",
+      "sha256": "049545f858522a7d0e32cf75138bd8d8b672c318b14d227353e08e42a47a1968"
+    },
+    {
+      "bytes": 15880169,
+      "name": "research_closure",
+      "path": "training/research_closure/arc3_cegis_closure_overlay_v38_60k.h5",
+      "records": 60000,
+      "sampled_validation": "PASS",
+      "sha256": "4d4fd2aa3b3bc06e3bba940b36afb24ce232e04d572c6a962c6d2e219b11e400"
+    },
+    {
+      "bytes": 3090959,
+      "name": "aegis",
+      "path": "training/aegis/arc3_aegis_rt_overlay_v40_64k.h5",
+      "records": 64000,
+      "sampled_validation": "PASS",
+      "sha256": "8ea4696105fdfc6e10ba494722a71faccf9f6ec125363af9c316edd4d96fee72"
+    }
+  ],
+  "total_records": 692000
+}
