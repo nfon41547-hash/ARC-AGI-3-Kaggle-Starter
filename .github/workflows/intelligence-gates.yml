@@ -1,0 +1,48 @@
+name: intelligence-gates
+
+on:
+  push:
+    branches: [main, "feat/**"]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  pure-numpy-agent:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install test-only dependencies
+        run: python -m pip install --disable-pip-version-check "numpy>=2.0,<3" "pytest>=8,<9"
+      - name: Compile source
+        run: python -m py_compile agent/my_agent.py scripts/benchmark_agent.py
+      - name: Run regression gates
+        run: python -m pytest -q
+      - name: Rebuild intelligence evidence
+        run: python scripts/benchmark_agent.py
+      - name: Enforce measurable improvement
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          report = json.loads(Path('evidence/intelligence_benchmark_v42.json').read_text())
+          by_name = {row['condition']: row for row in report['conditions']}
+          minimums = {
+              'navigation': 0.95,
+              'hidden_remap': 0.88,
+              'click': 0.99,
+          }
+          for name, minimum in minimums.items():
+              row = by_name[name]
+              assert row['adaptive']['completion_rate'] >= minimum, row
+              assert row['absolute_completion_gain'] >= 0.75, row
+              assert row['adaptive']['illegal_actions'] == 0, row
+          print('all intelligence gates passed')
+          PY
