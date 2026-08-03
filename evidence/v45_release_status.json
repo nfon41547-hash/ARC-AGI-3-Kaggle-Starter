@@ -1,0 +1,15 @@
+{
+  "version":"0.45.0",
+  "runtime_sha256":"7efbde6a558c942a8cb1b57d54310e2b530cb55fc73d55e2bf06ea9b6e701793",
+  "verification_archive_sha256":"f6872872856a67bc01c4a32863796c5e4cbeaf56ffe9c115ec7aef1f41f139d6",
+  "no_public_game_lookup":"PASS",
+  "no_fixed_color_semantics":"PASS",
+  "no_fixed_action_mapping":"PASS",
+  "animation_frame_preservation":"PASS",
+  "object_correspondence":"PASS",
+  "gif_and_json_sidecar":"PASS",
+  "synthetic_25x183_acceptance":"PASS",
+  "real_public_frame_corpus":"BLOCKED_EXTERNAL_RECORDINGS_REQUIRED",
+  "official_kaggle_rerun":"UNVERIFIED",
+  "official_score":"UNVERIFIED"
+}
