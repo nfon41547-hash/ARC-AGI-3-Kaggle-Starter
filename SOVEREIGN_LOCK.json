@@ -1,0 +1,21 @@
+{
+  "claims": {
+    "guaranteed_score": false,
+    "official_score": "UNVERIFIED"
+  },
+  "competition_profile": {
+    "blas_threads": 1,
+    "gpu_required": false,
+    "internet": false
+  },
+  "official_packages": {
+    "arc-agi": "0.9.9",
+    "arcengine": "0.9.3"
+  },
+  "payload_parts": 3,
+  "project": "ARC3 Sovereign Pure NumPy",
+  "python": ">=3.12",
+  "runtime_archive_bytes": 1036163,
+  "runtime_sha256": "1fda15b9725e388f9d98f9643cd9e1897803de6267f8102ac1f6af7936b71026",
+  "version": "0.41.0"
+}
