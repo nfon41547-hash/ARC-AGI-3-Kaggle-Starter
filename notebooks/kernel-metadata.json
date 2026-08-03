@@ -1,14 +1,18 @@
 {
-  "id": "REPLACE_WITH_YOUR_USERNAME/arc-prize-2026-arc-agi-3-starter",
-  "title": "ARC Prize 2026 \u2014 ARC-AGI-3 Starter",
+  "id": "bang1850/arc3-sovereign-numpy-v41",
+  "title": "ARC3 Sovereign Pure NumPy v0.41",
   "code_file": "submission.ipynb",
   "language": "python",
   "kernel_type": "notebook",
   "is_private": true,
-  "enable_gpu": true,
+  "enable_gpu": false,
   "enable_tpu": false,
   "enable_internet": false,
-  "keywords": [],
+  "keywords": [
+    "arc-agi-3",
+    "numpy",
+    "competition"
+  ],
   "dataset_sources": [],
   "kernel_sources": [],
   "competition_sources": [
