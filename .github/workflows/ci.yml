@@ -1,0 +1,36 @@
+name: sovereign-ci
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: python -m pip install --upgrade pip
+      - run: python -m pip install "numpy>=1.26,<3" pytest
+      - run: python scripts/verify_sovereign.py
+      - run: pytest -q tests/test_sovereign_runtime.py
+      - run: python scripts/build_notebook.py
+      - name: Verify notebook contract
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          notebook = json.loads(Path('notebooks/submission.ipynb').read_text())
+          assert notebook['nbformat'] == 4
+          assert notebook['metadata']['kaggle']['isInternetEnabled'] is False
+          assert notebook['metadata']['kaggle']['isGpuEnabled'] is False
+          print('notebook cells:', len(notebook['cells']))
+          PY
