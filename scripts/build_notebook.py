@@ -1,9 +1,9 @@
 """Build the canonical offline Kaggle notebook from ``agent/my_agent.py``.
 
-The generated notebook follows Kaggle's two-phase code-competition pattern:
-commit mode emits only a dummy ``submission.parquet``; competition rerun mode
-copies the official framework, registers ``MyAgent``, and connects it to the
-local gateway sidecar. The agent itself is Pure NumPy and CPU-only.
+Commit mode emits only a dummy ``submission.parquet``. Competition-rerun mode
+copies the official framework into writable storage, registers ``MyAgent``,
+and connects it to Kaggle's local gateway sidecar. The policy itself is Pure
+NumPy, CPU-only, deterministic, and offline.
 """
 from __future__ import annotations
 
@@ -97,7 +97,7 @@ def build() -> dict:
         )
     )
 
-    # /tmp avoids exposing my_agent.py as a candidate Kaggle output file.
+    # /tmp avoids exposing the agent source as a candidate Kaggle output file.
     write_agent_cell = code_cell("%%writefile /tmp/my_agent.py\n" + agent_body)
 
     run_cell = code_cell(
@@ -117,7 +117,7 @@ def build() -> dict:
 
                 # Register only the dependencies required by this submission.
                 with open('/kaggle/working/ARC-AGI-3-Agents/agents/__init__.py', 'w') as f:
-                    f.write("""from typing import Type
+                    f.write('''from typing import Type
             from dotenv import load_dotenv
             from .agent import Agent, Playback
             from .swarm import Swarm
@@ -127,13 +127,13 @@ def build() -> dict:
             load_dotenv()
 
             AVAILABLE_AGENTS: dict[str, Type[Agent]] = {
-                'random': Random,
-                'myagent': MyAgent,
+                "random": Random,
+                "myagent": MyAgent,
             }
-            """)
+            ''')
 
                 with open('/kaggle/working/ARC-AGI-3-Agents/.env', 'w') as f:
-                    f.write("""SCHEME=http
+                    f.write('''SCHEME=http
             HOST=gateway
             PORT=8001
             ARC_API_KEY=test-key-123
@@ -141,7 +141,7 @@ def build() -> dict:
             OPERATION_MODE=competition
             ENVIRONMENTS_DIR=
             RECORDINGS_DIR=/kaggle/working/server_recording
-            """)
+            ''')
 
                 !cd /kaggle/working/ARC-AGI-3-Agents && \\
                     PYTHONHASHSEED=0 \\
