@@ -1,0 +1,157 @@
+{
+  "all": {
+    "route_macro": 0.40295828125,
+    "v38_macro": 0.39104828125
+  },
+  "illegal": 0,
+  "route": "stacker only when stacker action equals all-data residual and confidence >= 0.35; otherwise v38 fallback",
+  "schema": "arc3-numpy-runtime-router-benchmark-v41",
+  "splits": {
+    "base_1": {
+      "illegal": 0,
+      "records": 12800,
+      "route_accuracy": 0.6996875,
+      "stack_agreement_coverage": 0.40578125,
+      "v38_accuracy": 0.69921875
+    },
+    "base_2": {
+      "illegal": 0,
+      "records": 12800,
+      "route_accuracy": 0.7275,
+      "stack_agreement_coverage": 0.46640625,
+      "v38_accuracy": 0.724375
+    },
+    "base_3": {
+      "illegal": 0,
+      "records": 12800,
+      "route_accuracy": 0.6975,
+      "stack_agreement_coverage": 0.402109375,
+      "v38_accuracy": 0.6971875
+    },
+    "base_4": {
+      "illegal": 0,
+      "records": 12800,
+      "route_accuracy": 0.827578125,
+      "stack_agreement_coverage": 0.42,
+      "v38_accuracy": 0.826484375
+    },
+    "cegis_1": {
+      "illegal": 0,
+      "records": 2500,
+      "route_accuracy": 0.1852,
+      "stack_agreement_coverage": 0.5504,
+      "v38_accuracy": 0.1864
+    },
+    "cegis_2": {
+      "illegal": 0,
+      "records": 2500,
+      "route_accuracy": 0.2008,
+      "stack_agreement_coverage": 0.5652,
+      "v38_accuracy": 0.2024
+    },
+    "cegis_3": {
+      "illegal": 0,
+      "records": 2500,
+      "route_accuracy": 0.1852,
+      "stack_agreement_coverage": 0.5412,
+      "v38_accuracy": 0.1856
+    },
+    "cegis_4": {
+      "illegal": 0,
+      "records": 2500,
+      "route_accuracy": 0.1832,
+      "stack_agreement_coverage": 0.5464,
+      "v38_accuracy": 0.1828
+    },
+    "frontier_1": {
+      "illegal": 0,
+      "records": 400,
+      "route_accuracy": 0.3225,
+      "stack_agreement_coverage": 0.3925,
+      "v38_accuracy": 0.3
+    },
+    "frontier_2": {
+      "illegal": 0,
+      "records": 400,
+      "route_accuracy": 0.305,
+      "stack_agreement_coverage": 0.3625,
+      "v38_accuracy": 0.27
+    },
+    "frontier_3": {
+      "illegal": 0,
+      "records": 400,
+      "route_accuracy": 0.3275,
+      "stack_agreement_coverage": 0.345,
+      "v38_accuracy": 0.295
+    },
+    "frontier_4": {
+      "illegal": 0,
+      "records": 400,
+      "route_accuracy": 0.2725,
+      "stack_agreement_coverage": 0.3975,
+      "v38_accuracy": 0.2675
+    },
+    "hard_1": {
+      "illegal": 0,
+      "records": 2000,
+      "route_accuracy": 0.3475,
+      "stack_agreement_coverage": 0.402,
+      "v38_accuracy": 0.347
+    },
+    "hard_2": {
+      "illegal": 0,
+      "records": 2000,
+      "route_accuracy": 0.2955,
+      "stack_agreement_coverage": 0.4075,
+      "v38_accuracy": 0.2865
+    },
+    "hard_3": {
+      "illegal": 0,
+      "records": 2000,
+      "route_accuracy": 0.3375,
+      "stack_agreement_coverage": 0.392,
+      "v38_accuracy": 0.335
+    },
+    "hard_4": {
+      "illegal": 0,
+      "records": 2000,
+      "route_accuracy": 0.3905,
+      "stack_agreement_coverage": 0.412,
+      "v38_accuracy": 0.3845
+    },
+    "quality_1": {
+      "illegal": 0,
+      "records": 1000,
+      "route_accuracy": 0.43,
+      "stack_agreement_coverage": 0.202,
+      "v38_accuracy": 0.4
+    },
+    "quality_2": {
+      "illegal": 0,
+      "records": 1000,
+      "route_accuracy": 0.421,
+      "stack_agreement_coverage": 0.279,
+      "v38_accuracy": 0.371
+    },
+    "quality_3": {
+      "illegal": 0,
+      "records": 1000,
+      "route_accuracy": 0.391,
+      "stack_agreement_coverage": 0.236,
+      "v38_accuracy": 0.362
+    },
+    "quality_4": {
+      "illegal": 0,
+      "records": 1000,
+      "route_accuracy": 0.512,
+      "stack_agreement_coverage": 0.265,
+      "v38_accuracy": 0.498
+    }
+  },
+  "test": {
+    "route_macro": 0.40495187500000007,
+    "route_worst": 0.1832,
+    "v38_macro": 0.39255645833333336,
+    "v38_worst": 0.1828
+  }
+}
