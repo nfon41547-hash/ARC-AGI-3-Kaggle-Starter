@@ -1,15 +1,18 @@
 {
-  "id": "REPLACE_WITH_YOUR_USERNAME/arc-prize-2026-arc-agi-3-sovereign-v43",
-  "title": "ARC Prize 2026 — Sovereign NumPy v0.43",
+  "id": "REPLACE_WITH_YOUR_USERNAME/arc3-gemma4-31b-rtxpro6000-v46",
+  "title": "ARC3 Gemma 4 31B RTX PRO 6000 v0.46",
   "code_file": "submission.ipynb",
   "language": "python",
   "kernel_type": "notebook",
   "is_private": true,
-  "enable_gpu": false,
+  "enable_gpu": true,
   "enable_tpu": false,
   "enable_internet": false,
-  "keywords": ["arc-agi-3", "numpy", "online-learning"],
-  "dataset_sources": [],
+  "keywords": ["arc-agi-3", "gemma-4", "rtx-pro-6000", "blackwell", "vllm"],
+  "dataset_sources": [
+    "REPLACE_WITH_OWNER/arc3-gemma4-31b-model",
+    "REPLACE_WITH_OWNER/arc3-blackwell-sm120-wheelhouse"
+  ],
   "kernel_sources": [],
   "competition_sources": ["arc-prize-2026-arc-agi-3"],
   "model_sources": []
