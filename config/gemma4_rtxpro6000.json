@@ -1,0 +1,44 @@
+{
+  "schema": "arc3/gemma4-rtxpro6000/v1",
+  "model_family": "gemma4",
+  "model_size": "31B",
+  "model_mount_candidates": [
+    "/kaggle/input/arc3-gemma4-31b-model/model",
+    "/kaggle/input/gemma-4-31b/model",
+    "/kaggle/input/google-gemma-4-31b/model"
+  ],
+  "wheelhouse_mount_candidates": [
+    "/kaggle/input/arc3-blackwell-sm120-wheelhouse/wheels",
+    "/kaggle/input/arc3-sm120-wheelhouse/wheels"
+  ],
+  "gpu": {
+    "required": true,
+    "name_contains": ["RTX PRO 6000", "Blackwell"],
+    "minimum_vram_gib": 90,
+    "minimum_compute_capability": [12, 0]
+  },
+  "engine": {
+    "backend": "vllm",
+    "dtype": "bfloat16",
+    "attention_backend": "auto",
+    "gpu_memory_utilization": 0.82,
+    "max_model_len": 32768,
+    "max_num_seqs": 2,
+    "max_num_batched_tokens": 4096,
+    "enable_prefix_caching": true,
+    "trust_remote_code": false
+  },
+  "authority": {
+    "model_role": "proposal_only",
+    "official_host_is_authoritative": true,
+    "verifier_required": true,
+    "model_free_fallback_allowed_before_scorecard": false,
+    "placeholder_submission_allowed": false
+  },
+  "offline": {
+    "internet_enabled": false,
+    "verify_sha256": true,
+    "require_model_manifest": true,
+    "require_wheel_manifest": true
+  }
+}

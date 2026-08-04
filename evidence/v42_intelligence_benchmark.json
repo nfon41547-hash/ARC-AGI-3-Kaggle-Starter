@@ -1,0 +1,40 @@
+{
+  "hidden_remap_random": {
+    "episodes": 200,
+    "mean_steps": 77.025,
+    "noops": 3120,
+    "solved": 23
+  },
+  "hidden_remap_v42": {
+    "episodes": 200,
+    "mean_steps": 22.18,
+    "noops": 288,
+    "solved": 186
+  },
+  "stationary_random": {
+    "episodes": 200,
+    "mean_steps": 77.585,
+    "noops": 3155,
+    "solved": 21
+  },
+  "stationary_v42": {
+    "episodes": 200,
+    "mean_steps": 18.74,
+    "noops": 253,
+    "solved": 188
+  },
+  "visible_modes_random": {
+    "episodes": 200,
+    "mean_steps": 77.62,
+    "noops": 3142,
+    "solved": 18
+  },
+  "visible_modes_v42": {
+    "episodes": 200,
+    "mean_steps": 19.635,
+    "noops": 192,
+    "solved": 197
+  },
+  "scope": "Deterministic synthetic 9x9 navigation with unknown action permutations, obstacles, visible mode switches, and hidden one-shot remapping.",
+  "claim_boundary": "This is controlled synthetic evidence, not an official ARC-AGI-3 score."
+}

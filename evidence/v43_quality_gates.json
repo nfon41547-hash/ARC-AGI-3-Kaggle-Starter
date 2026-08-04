@@ -1,0 +1,12 @@
+{
+  "bounded_contexts": true,
+  "deterministic_benchmark": true,
+  "forbidden_dependencies": [],
+  "imports": ["__future__", "agents", "arcengine", "collections", "dataclasses", "hashlib", "math", "numpy", "sovereign_v43_core", "sovereign_v43_memory", "sovereign_v43_types", "typing"],
+  "invalid_grid_rejected": true,
+  "official_score": "UNVERIFIED",
+  "runtime_files": ["my_agent.py", "sovereign_v43_core.py", "sovereign_v43_memory.py", "sovereign_v43_types.py"],
+  "source_bytes": 38731,
+  "source_lines": 1006,
+  "status": "PASS"
+}

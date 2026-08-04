@@ -1,0 +1,9 @@
+{
+  "illegal_actions": 0,
+  "iterations": 500,
+  "max_ms": 3.645863,
+  "median_ms": 1.6593575,
+  "p95_ms": 2.325539599999999,
+  "p99_ms": 3.276448939999999,
+  "scope": "Local CPU synthetic 32x32 navigation; not Kaggle target hardware evidence."
+}
